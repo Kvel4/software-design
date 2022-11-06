@@ -48,7 +48,7 @@ public class JPARepository {
     }
 
     public List<Product> findAllProducts() {
-        try (Connection connection = connection()) {
+        try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection
                     .prepareStatement("select * from Product;");
 
@@ -61,7 +61,7 @@ public class JPARepository {
     }
 
     public Product maxProductByPrice() {
-        try (Connection connection = connection()) {
+        try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection
                     .prepareStatement("select * from Product order by price desc limit 1;");
 
@@ -78,7 +78,7 @@ public class JPARepository {
     }
 
     public Product minProductByPrice() {
-        try (Connection connection = connection()) {
+        try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection
                     .prepareStatement("select * from Product order by price limit 1;");
 
@@ -95,7 +95,7 @@ public class JPARepository {
     }
 
     public int countProducts() {
-        try (Connection connection = connection()) {
+        try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select count(*) from Product;");
             resultSet.next();
@@ -114,7 +114,7 @@ public class JPARepository {
     }
 
     public long summaryPrice() {
-        try (Connection connection = connection()) {
+        try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select sum(price) from Product;");
             resultSet.next();
@@ -149,9 +149,5 @@ public class JPARepository {
         statement.close();
 
         return products;
-    }
-
-    private Connection connection() throws SQLException {
-        return dataSource.getConnection();
     }
 }
