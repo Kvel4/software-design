@@ -2,8 +2,6 @@ package ru.itmo.repositoty;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.itmo.model.Product;
 
 import java.sql.Connection;
@@ -17,8 +15,6 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 public class JPARepository {
-    private static final Logger logger = LoggerFactory.getLogger(JPARepository.class);
-
     private final DataSource dataSource;
 
     public JPARepository(Properties properties) {
@@ -30,7 +26,7 @@ public class JPARepository {
         this.dataSource = new HikariDataSource(config);
     }
 
-    public void insertProduct(Product product) {
+    public void insertProduct(Product product) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "insert into Product (Name, Price) values (?, ?);"
@@ -40,26 +36,18 @@ public class JPARepository {
             statement.setLong(2, product.price());
 
             statement.executeUpdate();
-        } catch (SQLException e) {
-            logger.error("Fail insert new product.", e);
-
-            throw new RuntimeException(e);
         }
     }
 
-    public List<Product> findAllProducts() {
+    public List<Product> findAllProducts() throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("select * from Product;")
         ) {
             return fetchListProductFromSql(statement);
-        } catch (SQLException e) {
-            logger.error("Fail find all products.", e);
-
-            throw new RuntimeException(e);
         }
     }
 
-    public Product maxProductByPrice() {
+    public Product maxProductByPrice() throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "select * from Product order by price desc limit 1;"
@@ -70,14 +58,10 @@ public class JPARepository {
             assert productList.size() == 1;
 
             return productList.get(0);
-        } catch (SQLException e) {
-            logger.error("Fail find max product by price.", e);
-
-            throw new RuntimeException(e);
         }
     }
 
-    public Product minProductByPrice() {
+    public Product minProductByPrice() throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "select * from Product order by price limit 1;"
@@ -88,38 +72,36 @@ public class JPARepository {
             assert productList.size() == 1;
 
             return productList.get(0);
-        } catch (SQLException e) {
-            logger.error("Fail find min product by price.", e);
-
-            throw new RuntimeException(e);
         }
     }
 
-    public int countProducts() {
+    public int countProducts() throws SQLException {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("select count(*) from Product;");
         ) {
+            ResultSet resultSet = statement.executeQuery("select count(*) from Product;");
             resultSet.next();
+
             return resultSet.getInt(1);
-        } catch (SQLException e) {
-            logger.error("Fail counting products.", e);
-
-            throw new RuntimeException(e);
         }
     }
 
-    public long summaryPrice() {
+    public long summaryPrice() throws SQLException {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("select sum(price) from Product;")
         ) {
+            ResultSet resultSet = statement.executeQuery("select sum(price) from Product;");
             resultSet.next();
-            return resultSet.getLong(1);
-        } catch (SQLException e) {
-            logger.error("Fail summing products.", e);
 
-            throw new RuntimeException(e);
+            return resultSet.getLong(1);
+        }
+    }
+
+    public void clear() throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+        ) {
+            statement.executeUpdate("delete from Product;");
         }
     }
 

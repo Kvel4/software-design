@@ -1,2 +1,2 @@
-rootProject.name = "software-design1"
+rootProject.name = "software-design"
 include("refactoring")
