@@ -31,15 +31,15 @@ public class JPARepository {
     }
 
     public void insertProduct(Product product) {
-        try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                .prepareStatement("insert into Product (Name, Price) values (?, ?);");
-
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "insert into Product (Name, Price) values (?, ?);"
+             )
+        ) {
             statement.setString(1, product.name());
             statement.setLong(2, product.price());
 
             statement.executeUpdate();
-            statement.close();
         } catch (SQLException e) {
             logger.error("Fail insert new product.", e);
 
@@ -48,10 +48,9 @@ public class JPARepository {
     }
 
     public List<Product> findAllProducts() {
-        try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                    .prepareStatement("select * from Product;");
-
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("select * from Product;")
+        ) {
             return fetchListProductFromSql(statement);
         } catch (SQLException e) {
             logger.error("Fail find all products.", e);
@@ -61,10 +60,11 @@ public class JPARepository {
     }
 
     public Product maxProductByPrice() {
-        try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                    .prepareStatement("select * from Product order by price desc limit 1;");
-
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "select * from Product order by price desc limit 1;"
+             )
+        ) {
             List<Product> productList = fetchListProductFromSql(statement);
 
             assert productList.size() == 1;
@@ -78,10 +78,11 @@ public class JPARepository {
     }
 
     public Product minProductByPrice() {
-        try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                    .prepareStatement("select * from Product order by price limit 1;");
-
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "select * from Product order by price limit 1;"
+             )
+        ) {
             List<Product> productList = fetchListProductFromSql(statement);
 
             assert productList.size() == 1;
@@ -95,17 +96,12 @@ public class JPARepository {
     }
 
     public int countProducts() {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select count(*) from Product;");
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("select count(*) from Product;");
+        ) {
             resultSet.next();
-
-            int res = resultSet.getInt(1);
-
-            resultSet.close();
-            statement.close();
-
-            return res;
+            return resultSet.getInt(1);
         } catch (SQLException e) {
             logger.error("Fail counting products.", e);
 
@@ -114,17 +110,12 @@ public class JPARepository {
     }
 
     public long summaryPrice() {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select sum(price) from Product;");
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("select sum(price) from Product;")
+        ) {
             resultSet.next();
-
-            long res = resultSet.getLong(1);
-
-            resultSet.close();
-            statement.close();
-
-            return res;
+            return resultSet.getLong(1);
         } catch (SQLException e) {
             logger.error("Fail summing products.", e);
 
@@ -133,21 +124,17 @@ public class JPARepository {
     }
 
     private List<Product> fetchListProductFromSql(PreparedStatement statement) throws SQLException {
-        ResultSet resultSet = statement.executeQuery();
-
-        ArrayList<Product> products = new ArrayList<>();
-        while (resultSet.next()) {
-            products.add(
+        try (ResultSet resultSet = statement.executeQuery()) {
+            ArrayList<Product> products = new ArrayList<>();
+            while (resultSet.next()) {
+                products.add(
                     new Product(
-                            resultSet.getString("name"),
-                            resultSet.getInt("price")
+                        resultSet.getString("name"),
+                        resultSet.getInt("price")
                     )
-            );
+                );
+            }
+            return products;
         }
-
-        resultSet.close();
-        statement.close();
-
-        return products;
     }
 }
