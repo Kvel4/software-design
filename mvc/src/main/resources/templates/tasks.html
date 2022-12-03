@@ -1,0 +1,43 @@
+<html lang="ru">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+    <title>Мои дела</title>
+</head>
+<body>
+<h3>
+    <div th:text="${listName}"></div>
+</h3>
+<table>
+    <th:block th:each="task : ${tasks}">
+        <tr>
+            <td th:text="${task.getTaskName()}"></td>
+            <td th:text="${task.isReady()} ? 'Ready'"></td>
+            <td>
+                <form action="/done-task" method="POST">
+                    <input type="hidden" name="listId" th:value="${listId}">
+                    <button type="submit" name="taskId" th:value="${task.getTaskId()}">
+                        Пометить как выполненный
+                    </button>
+                </form>
+            </td>
+            <td>
+                <form action="/delete-task" method="POST">
+                    <input type="hidden" name="listId" th:value="${listId}">
+                    <button type="submit" name="taskId" th:value="${task.getTaskId()}">
+                        Удалить дело
+                    </button>
+                </form>
+            </td>
+        </tr>
+    </th:block>
+    <form action="/add-new-task" method="POST">
+        <label for="list">
+            Новое дело!
+        </label>
+        <input id="list" name="taskName" type="text" placeholder="Назовите новый список дел...">
+        <button type="submit" name="listId" th:value="${listId}">Submit</button>
+    </form>
+</table>
+<a href="/">Назад</a>
+</body>
+</html>
